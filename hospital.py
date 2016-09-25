@@ -2,6 +2,9 @@ import sys
 import requests
 import attr
 import pandas as pd
+import wget
+import urllib2
+import urllib
 from bs4 import BeautifulSoup
 
 
@@ -74,8 +77,14 @@ for row in rows:
 				data['year'].append( cols[0].get_text() )
 				data['name'].append( cols[1].get_text() )
 				data['id'].append( cols[2].get_text() )
-				data['file'].append( cols[3].get_text() )
+				url_complete = str(cols[3])
+				url_complete_start = url_complete.find('/')
+				url_complete_end = url_complete.find('target')
+				url_save = str(HOST+url_complete[url_complete_start:url_complete_end-2])
+				new_url_save = url_save.replace(' ',"%20")
+				data['file'].append(new_url_save)
 
+				
 dogData = pd.DataFrame( data )
 
-dogData.to_csv("AKC_Dog_Registrations.csv")
+dogData.to_csv("hospitals.csv")
