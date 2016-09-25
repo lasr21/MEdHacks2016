@@ -21,9 +21,6 @@ session = requests.Session()
 
 r = session.get(URL, headers=HEADERS)
 
-if r.status_code != requests.codes.ok:
-    sys.exit()
-
 soup = BeautifulSoup(r.content)
 
 # ASP validation and session fields
@@ -31,10 +28,7 @@ view_state = soup.select("#__VIEWSTATE")[0]['value']
 view_state_generator = soup.select("#__VIEWSTATEGENERATOR")[0]['value']
 event_validation = soup.select("#__EVENTVALIDATION")[0]['value']
 
-#Print the data from validation
-print(view_state)
-print(view_state_generator)
-print(event_validation)
+
 
 FORM_FIELDS = {
 	'__VIEWSTATE': view_state,
@@ -51,12 +45,14 @@ FORM_FIELDS = {
 # POST form fields
 r = session.post(URL, data=FORM_FIELDS, headers=HEADERS, cookies=r.cookies.get_dict())
 
-if r.status_code != requests.codes.ok:
-    print "Failed with status_code %d" % r.status_code
-    sys.exit()
 
-soup = BeautifulSoup(r.content)
-print soup
+soup = str(BeautifulSoup(r.content))
+
+
+start = soup.find('<table border')
+end = soup.find('</table><p id="counter">')
+
+print soup[start:end]
 
 
 
