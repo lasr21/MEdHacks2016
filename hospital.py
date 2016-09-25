@@ -1,7 +1,9 @@
 import sys
 import requests
 import attr
+import pandas as pd
 from bs4 import BeautifulSoup
+
 
 HOST = 'www.oshpd.ca.gov'
 URL = 'http://%s/chargemaster/default.aspx' % HOST
@@ -47,33 +49,33 @@ FORM_FIELDS = {
 r = session.post(URL, data=FORM_FIELDS, headers=HEADERS, cookies=r.cookies.get_dict())
 
 
-soup = str(BeautifulSoup(r.content))
 
+data = r.text
+soup = BeautifulSoup(data)
+table = soup.find_all('table')[1]  
 
-start = soup.find('<table border')
-#The +8 is the end of the table
-end = (soup.find('</table><p id="counter">')+8)
+rows = table.find_all('tr')[3:]
 
+data = {
+    'year' : [],
+    'name' : [],
+    'id' : [],
+    'file' : []
+}
 
-table_to_scrap = soup[start:end]
+n = 1
 
+for row in rows:
+    cols = row.find_all('td')
+    if len(cols) > 1:
+    	file_name = str(cols[3])
+    	if len(str(cols[0])) > 9:
+    		if file_name.find("Common25_2015.xls") > 1:
+				data['year'].append( cols[0].get_text() )
+				data['name'].append( cols[1].get_text() )
+				data['id'].append( cols[2].get_text() )
+				data['file'].append( cols[3].get_text() )
 
-#Table scraping
-soup1 = BeautifulSoup(table_to_scrap)
+dogData = pd.DataFrame( data )
 
-table = soup1.find("table", attrs={"class":"details"})
-
-print("table to show")
-print(table)
-
-# The first tr contains the field names.
-headings = [th.get_text() for th in table.find("tr").find_all("th")]
-
-datasets = []
-for row in table.find_all("tr")[1:]:
-    dataset = zip(headings, (td.get_text() for td in row.find_all("td")))
-    datasets.append(dataset)
-
-print datasets
-
-
+dogData.to_csv("AKC_Dog_Registrations.csv")
