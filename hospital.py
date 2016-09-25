@@ -1,5 +1,6 @@
 import sys
 import requests
+import attr
 from bs4 import BeautifulSoup
 
 HOST = 'www.oshpd.ca.gov'
@@ -50,9 +51,29 @@ soup = str(BeautifulSoup(r.content))
 
 
 start = soup.find('<table border')
-end = soup.find('</table><p id="counter">')
+#The +8 is the end of the table
+end = (soup.find('</table><p id="counter">')+8)
 
-print soup[start:end]
 
+table_to_scrap = soup[start:end]
+
+
+#Table scraping
+soup1 = BeautifulSoup(table_to_scrap)
+
+table = soup1.find("table", attrs={"class":"details"})
+
+print("table to show")
+print(table)
+
+# The first tr contains the field names.
+headings = [th.get_text() for th in table.find("tr").find_all("th")]
+
+datasets = []
+for row in table.find_all("tr")[1:]:
+    dataset = zip(headings, (td.get_text() for td in row.find_all("td")))
+    datasets.append(dataset)
+
+print datasets
 
 
