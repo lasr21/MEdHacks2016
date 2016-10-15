@@ -7,10 +7,11 @@ import urllib2
 import urllib
 from bs4 import BeautifulSoup
 
-
+# Where the hospital data is stored
 HOST = 'www.oshpd.ca.gov'
 URL = 'http://%s/chargemaster/default.aspx' % HOST
 
+#Since the form in the page is build with asp wee need to send the headers
 HEADERS = {
     'Host': HOST,
     'Origin': 'http://%s' % HOST,
@@ -23,6 +24,7 @@ HEADERS = {
     'Upgrade-Insecure-Requests': '1'
 }
 
+# WE start the session and send the header
 session = requests.Session()
 
 r = session.get(URL, headers=HEADERS)
@@ -35,7 +37,7 @@ view_state_generator = soup.select("#__VIEWSTATEGENERATOR")[0]['value']
 event_validation = soup.select("#__EVENTVALIDATION")[0]['value']
 
 
-
+#Send the info to the form with the session info
 FORM_FIELDS = {
 	'__VIEWSTATE': view_state,
 	'__VIEWSTATEGENERATOR': view_state_generator,
@@ -52,13 +54,14 @@ FORM_FIELDS = {
 r = session.post(URL, data=FORM_FIELDS, headers=HEADERS, cookies=r.cookies.get_dict())
 
 
-
+#We srap the data from the page with BeautifulSoup
 data = r.text
 soup = BeautifulSoup(data)
 table = soup.find_all('table')[1]  
 
 rows = table.find_all('tr')[3:]
 
+#Here's the info that we are going to collect form the page table
 data = {
     'year' : [],
     'name' : [],
@@ -68,6 +71,7 @@ data = {
 
 n = 1
 
+#find only the common top 25 and save in a CSV
 for row in rows:
     cols = row.find_all('td')
     if len(cols) > 1:
@@ -84,7 +88,8 @@ for row in rows:
 				new_url_save = url_save.replace(' ',"%20")
 				data['file'].append(new_url_save)
 
-				
+#Save the data 				
 dogData = pd.DataFrame( data )
 
+#Save it to to csv
 dogData.to_csv("hospitals.csv")
